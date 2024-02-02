@@ -6,23 +6,18 @@ on:
       - main
 
 jobs:
-  validate-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Set Up Salesforce CLI
-        uses: sfdx-actions/setup-sfdx@v1
-        with:
-          sfdx-cli-url: 'auto'
+      - name: Set up Salesforce CLI
+        run: |
+          echo "Y" | sfdx plugins:install salesforcedx
+          sfdx auth:jwt:grant --clientid ${{ secrets.SFDC_CLIENT_ID }} --jwtkeyfile ${{ secrets.SFDC_JWT_KEY_FILE }} --username ${{ secrets.SFDC_USERNAME }} --setdefaultdevhubusername
 
-      - name: Authenticate with Salesforce Org
-        run: sfdx force:auth:jwt:grant --clientid ${{ secrets.SF_CLIENT_ID }} --jwtkeyfile ${{ secrets.SF_JWT_KEY_FILE }} --username ${{ secrets.SF_USERNAME }} --setdefaultdevhubusername --setalias my-scratch-org
-
-      - name: Validate Salesforce Metadata
-        run: sfdx force:source:push -u my-scratch-org
-
-      - name: Deploy to Salesforce Org
-        run: sfdx force:source:deploy -p force-app/main/default -u my-scratch-org
+      - name: Deploy to Scratch Org
+        run: |
+          sfdx force:source:deploy -u YourScratchOrgAlias -p force-app
